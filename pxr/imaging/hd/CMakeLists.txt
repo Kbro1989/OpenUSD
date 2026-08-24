@@ -140,6 +140,7 @@ pxr_library(hd
         nurbsPatchSchema
         nurbsPatchTrimCurveSchema
         overlayContainerDataSource
+        particleFieldSchema
         perfLog
         planeSchema
         pluginRenderDelegateUniqueHandle
@@ -147,6 +148,7 @@ pxr_library(hd
         points
         prefixingSceneIndex
         primGather
+        primIdSchema
         primOriginSchema
         primTypeIndex
         primvarSchema
@@ -169,6 +171,7 @@ pxr_library(hd
         renderPassSchema
         renderPassState
         renderProductSchema
+        renderSettingDescriptorSchema
         renderSettings
         renderSettingsSchema
         renderVarSchema

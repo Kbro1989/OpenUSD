@@ -210,6 +210,7 @@ TF_DEFINE_PRIVATE_TOKENS(
     (__FnKat_bbox)
     (viewerMouseClick)
     ((houdiniInteractive, "houdini:interactive"))
+    ((houdiniViewport, "houdini:viewport"))
     (volumeFilter)
 );
 
@@ -354,6 +355,7 @@ HdPrmanRenderDelegate::HdPrmanRenderDelegate(
                      xpuCpuConfig,
                      xpuGpuConfig,
                      _GetExtraArgs(settingsMap)))
+  , _isHoudiniViewport(false)
 {
     if(_renderParam->IsValid()) {
         _Initialize();
@@ -805,8 +807,11 @@ HdPrmanRenderDelegate::GetMaterialRenderContexts() const
 {
     TfTokenVector contexts;
 
-    // Houdini's visualize VOP from H22.0
-    contexts.push_back(_tokens->hvisualizeRenderContext);
+    // From H22.0, the visualize VOP used for soloing materials in Solaris
+    // generates a "ND_surface_unlit" in the "hvisualize" render context.
+    if (_isHoudiniViewport) {
+        contexts.push_back(_tokens->hvisualizeRenderContext);
+    }
 
     contexts.push_back(_tokens->ri);
 
@@ -858,6 +863,11 @@ HdPrmanRenderDelegate::SetRenderSetting(TfToken const &key,
     if (key == _tokens->viewerMouseClick || key == _tokens->houdiniInteractive)
         return;
 
+    if(key == _tokens->houdiniViewport) {
+        _isHoudiniViewport = true;
+        return;
+    }
+
     HdRenderDelegate::SetRenderSetting(key, value);
 
     if(key == _tokens->renderCameraPath)
@@ -867,8 +877,8 @@ HdPrmanRenderDelegate::SetRenderSetting(TfToken const &key,
         // the shutter of the active camera can be passed to riley,
         // prior to handling any geometry.
         SdfPath camPath = value.UncheckedGet<SdfPath>();
-        _renderParam->GetCameraContext().SetCameraPath(camPath);
-        _renderParam->GetCameraContext().MarkCameraInvalid(camPath);
+        _renderParam->GetCameraContext().SetActiveCameraPath(camPath);
+        _renderParam->GetCameraContext().MarkCameraInvalidIfActive(camPath);
         HdRenderIndex *renderIndex = GetRenderIndex();
         if(renderIndex) {
             // Needed to trigger call to
